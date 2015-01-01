@@ -1,6 +1,7 @@
 import scala.io.Source
 import scala.collection.mutable.Stack
 import scala.collection.mutable.Set
+import scala.sys.process._
 
 object TestRead {
   // helper class to handle a target's command and all its dependencies
@@ -14,6 +15,7 @@ object TestRead {
      * exist) and a list of its dependencies as Strings
      */
     var files: Map[String, SourceTuple] = Map()
+    var cmds: Map[String, String] = Map()
     var lastTarget = ""
     for (line <- fi.getLines()) {
       if (line.indexOf(':') > 0) { // new target here
@@ -30,6 +32,7 @@ object TestRead {
         tabs += 1
         files(lastTarget)._1 = line.replaceAll("^\t+", "") // XXX Support only one command
         println("Reading command for "+lastTarget+":"+files(lastTarget)._1)
+        cmds += (lastTarget -> files(lastTarget)._1)
       }
       lines += 1
     }
@@ -68,6 +71,9 @@ object TestRead {
 
     for ((key, value) <- files) {
       println("Target "+key+" has "+value._2.size+" deps"+ (if (value._2.size > 0) ": "+value._2 else ""));
+      println("Command to execute: "+cmds(key))
+      //Using full call to not mess up with pipes and others
+      sys.process.stringSeqToProcess(Seq("/bin/bash","-c",cmds(key)))!
     }
   }
 }
