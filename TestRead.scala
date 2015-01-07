@@ -5,7 +5,7 @@ import scala.sys.process._
 
 object TestRead {
   // helper class to handle a target's command and all its dependencies
-  class SourceTuple(var _1: String, var _2: Set[String]) {}
+  class SourceTuple(var _1: String, var _2: Set[String], var cmds: List[String]) {}
   def main(args: Array[String]) {
     val fi = Source.fromFile(if (args.length < 1) "testmakefile" else args(0))
     var tabs, lines = 0
@@ -26,13 +26,16 @@ object TestRead {
           println("WARNING: double reference to "+lastTarget+". Ignoring...")
         else // add the entry with its dependencies (if they exist)
           files += (lastTarget -> new SourceTuple("",
-            if (splitted.length > 1) Set(splitted(1).replaceAll("[ \t]", " ").split(' ').filter(_ != "") :_*) else Set()))
+            if (splitted.length > 1) Set(splitted(1).replaceAll("[ \t]", " ").split(' ').filter(_ != "") :_*) else Set(),
+            List[String]()
+            ))
       }
       if (line.length > 0 && line(0) == '\t' && lastTarget != "") {
         tabs += 1
         files(lastTarget)._1 = line.replaceAll("^\t+", "") // XXX Support only one command
         println("Reading command for "+lastTarget+":"+files(lastTarget)._1)
         cmds += (lastTarget -> files(lastTarget)._1)
+        files(lastTarget).cmds = files(lastTarget)._1 :: files(lastTarget).cmds
       }
       lines += 1
     }
@@ -71,9 +74,10 @@ object TestRead {
 
     for ((key, value) <- files) {
       println("Target "+key+" has "+value._2.size+" deps"+ (if (value._2.size > 0) ": "+value._2 else ""));
-      println("Command to execute: "+cmds(key))
+      println("Command to execute: "+value.cmds)
       //Using full call to not mess up with pipes and others
       sys.process.stringSeqToProcess(Seq("/bin/bash","-c",cmds(key)))!
+      //sys.process.stringSeqToProcess(Seq("/bin/bash","-c",value.cmds(0)))!
     }
   }
 }
