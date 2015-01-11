@@ -1,0 +1,27 @@
+all: k1 k2
+	echo "all done"
+
+k1: a b c
+	echo k2
+	echo I am so happy lulz
+
+k2: a d e f
+	echo k2
+
+a:
+	echo a
+
+b:
+	echo b
+
+c:
+	echo c
+
+d:
+	echo d
+
+e:
+	echo e
+
+f:
+	echo f

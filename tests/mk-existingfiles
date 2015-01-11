@@ -1,0 +1,19 @@
+all: prep k1 k2
+	echo All done
+	cat out/k1 out/k2 > out/final
+
+prep:
+	mkdir -p out
+
+k1: a f1
+	echo k1
+	cat f1 out/a > out/k1
+	echo lulz >> out/k1
+
+k2: f2 f3
+	echo k2
+	cat f2 f3 > out/k2
+
+a: f1 f2
+	echo a >> f1
+	echo f2 > out/a
