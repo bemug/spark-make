@@ -1,3 +1,4 @@
+import scala.collection.mutable.ListBuffer
 import scala.io.Source
 import scala.collection.mutable.Stack
 import scala.collection.mutable.Set
@@ -77,11 +78,45 @@ object TestRead {
       }
     }
 
-    for ((key, value) <- files) {
-      println("Target "+key+" has "+value.deps.size+" deps"+ (if (value.deps.size > 0) ": "+value.deps else ""));
-      println(value.cmds.length + " commands to execute: "+value.cmds)
-      //Using full call to not mess up with pipes and others
-      sys.process.stringSeqToProcess(Seq("/bin/bash","-c",value.cmds(0)))!
+    /* Put them in the right order */
+    print("\nSorting..")
+    var mm = collection.mutable.Map[String, SourceTuple]() ++= files //clone
+    var orderedFile : ListBuffer[ListBuffer[String]] = ListBuffer()
+    var inserted : Set[String] = Set()
+    var previouslyInserted : Set[String] = Set()
+    var nbPass = 0
+    while (!files.isEmpty) {
+      orderedFile += ListBuffer()
+      for ((key, value) <- files) {
+        /* Remove already inserted rules */
+        value.deps --= previouslyInserted
+        /* Adds them to orderedFile if no more dependencies required */
+        if (value.deps.isEmpty) {
+          orderedFile(nbPass) += key
+          inserted += key
+          // and removes them
+          files -= key
+        }
+      }
+      previouslyInserted = inserted.clone
+      inserted.clear()
+      nbPass+=1
+    }
+    println(" Done!")
+    println("Will compile in this order:\n"+orderedFile+"\n")
+
+
+    /* Compile */
+    println("Compiling..")
+    for (keyList <- orderedFile) {
+      println("Starting a new layer.")
+      for (key <- keyList) {
+        var value = mm(key)
+        println("Target "+key+" has "+value.deps.size+" deps"+ (if (value.deps.size > 0) ": "+value.deps else ""));
+        println(value.cmds.length + " commands to execute: "+value.cmds)
+        //Using full call to not mess up with pipes and others
+        sys.process.stringSeqToProcess(Seq("/bin/bash","-c",value.cmds(0)))!
+      }
     }
   }
 }
