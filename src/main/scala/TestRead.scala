@@ -3,6 +3,10 @@ import scala.io.Source
 import scala.collection.mutable.Stack
 import scala.collection.mutable.Set
 import scala.sys.process._
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkContext._
+import org.apache.spark.SparkConf
+
 
 object TestRead {
   /**
@@ -12,8 +16,13 @@ object TestRead {
    * @member cmds List of commands that need to be executed. They are in
    * reverse order. You should pop the back of it
    */
-  class SourceTuple(var name: String, var deps: Set[String], var cmds: List[String]) {}
+  class SourceTuple(var name: String, var deps: Set[String], var cmds:
+    List[String]) extends java.io.Serializable {}
   def main(args: Array[String]) {
+
+    val conf = new SparkConf().setAppName("Spark Make")
+    val sc = new SparkContext(conf)
+
     val fi = Source.fromFile(if (args.length < 1) "testmakefile" else args(0))
     var tabs, lines = 0
     /*
@@ -110,7 +119,8 @@ object TestRead {
     println("Compiling..")
     for (keyList <- orderedFile) {
       println("Starting a new layer.")
-      for (key <- keyList) {
+      val distKeyList = sc.parallelize(keyList)
+      for (key <- distKeyList) {
         var value = mm(key)
         println("Target "+key+" has "+value.deps.size+" deps"+ (if (value.deps.size > 0) ": "+value.deps else ""));
         println(value.cmds.length + " commands to execute: "+value.cmds)
