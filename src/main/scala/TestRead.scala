@@ -119,7 +119,7 @@ object TestRead {
     println("Compiling..")
     for (keyList <- orderedFile) {
       println("Starting a new layer.")
-      val distKeyList = sc.parallelize(keyList)
+      val distKeyList = sc.parallelize(keyList, keyList.size)
       for (key <- distKeyList) {
         var value = mm(key)
         println("Target "+key+" has "+value.deps.size+" deps"+ (if (value.deps.size > 0) ": "+value.deps else ""));
