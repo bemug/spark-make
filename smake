@@ -2,6 +2,7 @@
 
 SPARK_DIR="spark-1.1.1"
 SPARK_ENV="$SPARK_DIR/conf/spark-env.sh"
+SPARK_SLAVES="$SPARK_DIR/conf/slaves"
 SBT_FILE="simple.sbt"
 SRC_DIR="src"
 IP_ADDR=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | head -n 1`
@@ -19,7 +20,7 @@ function usage {
 	echo "Usage:"
 	echo -e "\t--compile: compile source code to be executed"
 	echo -e "\t--master: configure this pc as master"
-	echo -e "\t--workers [workers]: set workers as workers"
+	echo -e "\t--worker <hostname>: add a worker to the worker list"
 	echo -e "\t--run: run the compiled source code"
 }
 
@@ -46,8 +47,29 @@ function master {
 	echo -e " Done!\n"
 }
 
-function workers {
-	echo "Workers"
+function worker {
+	echo "Adding a worker"
+	echo -n "Check worker state.. "
+	if ping -c 1 $WORKER_HOST &> /dev/null
+	then
+		echo "UP!"
+		echo -n "Resolving ip.. "
+		WORKER_IP=`host $WORKER_HOST | awk '/has address/ { print $4 }'`
+		if [[ $WORKER_IP ]]
+		then
+			echo "OK"
+			echo -n "Adding to workers' list.. "
+			echo "$WORKER_IP" >> $SPARK_SLAVES
+			echo "Done!"
+		else
+			echo "KO"
+			echo "Unable to resolve ip, skipping"
+		fi
+	else
+		echo "DOWN!"
+		echo "Skipping $WORKER_HOST because it's down"
+	fi
+	echo ""
 }
 
 function run {
@@ -78,8 +100,10 @@ do
 	"--master")
 		master
 		;;
-	"--workers")
-		workers
+	"--worker")
+		shift
+		WORKER_HOST=$1
+		worker
 		;;
 	"--run")
 		run
