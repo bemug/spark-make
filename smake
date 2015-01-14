@@ -2,7 +2,7 @@
 
 SPARK_DIR="spark-1.1.1"
 SPARK_ENV="$SPARK_DIR/conf/spark-env.sh"
-IP_ADDR=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`
+IP_ADDR=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | head -n 1`
 
 #Useless funcs
 function splash {
@@ -29,7 +29,7 @@ function compile {
 
 function master {
 	echo -n "Setting this computer as master.."
-	echo "export SPARK_MASTER_IP=$IP" > $SPARK_ENV
+	echo "export SPARK_MASTER_IP=$IP_ADDR" > $SPARK_ENV
 	echo "export SPARK_MASTER_PORT=7077" >> $SPARK_ENV
 	echo "export MASTER=spark://\${SPARK_MASTER_IP}:\${SPARK_MASTER_PORT}" >> $SPARK_ENV
 	echo " Done!"
