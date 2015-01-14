@@ -6,6 +6,7 @@ import scala.sys.process._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
+import java.nio.file.{Paths, Files}
 
 
 object TestRead {
@@ -31,6 +32,14 @@ object TestRead {
      * exist) and a list of its dependencies as Strings
      */
     var files: Map[String, SourceTuple] = Map()
+    val baseDirPattern = "^.*/".r
+    val reg = baseDirPattern findFirstIn args(0)
+    val makeDir =
+      if (reg == None)
+        "./"
+      else
+        reg.get
+
     var lastTarget = ""
     for (line <- fi.getLines()) {
       if (line.indexOf(':') > 0) { // new target here
@@ -41,7 +50,7 @@ object TestRead {
           println("WARNING: double reference to "+lastTarget+". Ignoring...")
         else // add the entry with its dependencies (if they exist)
           files += (lastTarget -> new SourceTuple(lastTarget,
-            if (splitted.length > 1) Set(splitted(1).replaceAll("[ \t]", " ").split(' ').filter(_ != "") :_*) else Set(),
+            if (splitted.length > 1) Set(splitted(1).replaceAll("[ \t]", " ").split(' ').filterNot((f: String) =>  Files.exists(Paths.get(makeDir+f))) :_*) else Set(),
             List[String]()
             ))
       }
