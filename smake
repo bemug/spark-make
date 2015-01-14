@@ -2,6 +2,8 @@
 
 SPARK_DIR="spark-1.1.1"
 SPARK_ENV="$SPARK_DIR/conf/spark-env.sh"
+SBT_FILE="simple.sbt"
+SRC_DIR="src"
 IP_ADDR=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | head -n 1`
 
 #Useless funcs
@@ -25,6 +27,15 @@ function usage {
 #Usefull funcs
 function compile {
 	echo "Compiling"
+	#Prepare files
+	cp -r $SBT_FILE $SRC_DIR $SPARK_DIR
+	cd $SPARK_DIR
+	#Compile
+	./sbt/sbt package
+	#Go back
+	rm -rf $SBT_FILE $SRC_DIR
+	cd ..
+	echo -e "Done!\n"
 }
 
 function master {
@@ -32,7 +43,7 @@ function master {
 	echo "export SPARK_MASTER_IP=$IP_ADDR" > $SPARK_ENV
 	echo "export SPARK_MASTER_PORT=7077" >> $SPARK_ENV
 	echo "export MASTER=spark://\${SPARK_MASTER_IP}:\${SPARK_MASTER_PORT}" >> $SPARK_ENV
-	echo " Done!"
+	echo -e " Done!\n"
 }
 
 function workers {
