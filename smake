@@ -40,16 +40,16 @@ function compile {
 }
 
 function master {
-	echo -n "Setting this computer as master.."
+	echo -n "Setting this computer as master.. "
 	echo "export SPARK_MASTER_IP=$IP_ADDR" > $SPARK_ENV
 	echo "export SPARK_MASTER_PORT=7077" >> $SPARK_ENV
 	echo "export MASTER=spark://\${SPARK_MASTER_IP}:\${SPARK_MASTER_PORT}" >> $SPARK_ENV
-	echo -e " Done!\n"
+	echo -e "Done!\n"
 }
 
 function worker {
-	echo "Adding a worker"
-	echo -n "Check worker state.. "
+	echo "Adding worker $WORKER_HOST"
+	echo -n "Checking worker state.. "
 	if ping -c 1 $WORKER_HOST &> /dev/null
 	then
 		echo "UP!"
@@ -70,6 +70,12 @@ function worker {
 		echo "Skipping $WORKER_HOST because it's down"
 	fi
 	echo ""
+}
+
+function clearworkers {
+	echo -n "Clearing workers' list.. "
+	echo "#Put here workers' ips" > $SPARK_SLAVES
+	echo -e "Done!\n"
 }
 
 function run {
@@ -104,6 +110,9 @@ do
 		shift
 		WORKER_HOST=$1
 		worker
+		;;
+	"--clear-workers")
+		clearworkers
 		;;
 	"--run")
 		run
