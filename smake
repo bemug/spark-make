@@ -1,0 +1,84 @@
+#!/bin/bash
+
+SPARK_DIR="spark-1.1.1"
+SPARK_ENV="$SPARK_DIR/conf/spark-env.sh"
+IP_ADDR=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`
+
+#Useless funcs
+function splash {
+	echo "               _       "
+	echo " ____ __  __ _| |_____ "
+	echo "(_-< '  \/ _\` | / / -_)"
+	echo "/__/_|_|_\__,_|_\_\___|"
+	echo
+}
+
+function usage {
+	echo "Usage:"
+	echo -e "\t--compile: compile source code to be executed"
+	echo -e "\t--master: configure this pc as master"
+	echo -e "\t--workers [workers]: set workers as workers"
+	echo -e "\t--run: run the compiled source code"
+}
+
+
+#Usefull funcs
+function compile {
+	echo "Compiling"
+}
+
+function master {
+	echo -n "Setting this computer as master.."
+	echo "export SPARK_MASTER_IP=$IP" > $SPARK_ENV
+	echo "export SPARK_MASTER_PORT=7077" >> $SPARK_ENV
+	echo "export MASTER=spark://\${SPARK_MASTER_IP}:\${SPARK_MASTER_PORT}" >> $SPARK_ENV
+	echo " Done!"
+}
+
+function workers {
+	echo "Workers"
+}
+
+function run {
+	echo "Run"
+}
+
+#Start
+splash #Display ascii
+#Check for args
+if [ $# -eq 0 ]
+then
+    echo "Please provide an argument"
+	usage
+	exit -1
+fi
+#Check spark folder
+if [ ! -d "$SPARK_DIR" ]; then
+	echo "Spark directory not found, please run get-spark.sh first."
+	exit -1
+fi
+#Parse args
+while [ "$1" ]
+do
+	case "$1" in
+	"--compile")
+		compile
+		;;
+	"--master")
+		master
+		;;
+	"--workers")
+		workers
+		;;
+	"--run")
+		run
+		;;
+	*)
+		echo -e "\nWARNING: Unknown argument $1, skipping.\n"
+		;;
+	esac
+    shift
+done
+
+# End of file
+
