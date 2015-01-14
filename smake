@@ -3,6 +3,10 @@
 SPARK_DIR="spark-1.1.1"
 SPARK_ENV="$SPARK_DIR/conf/spark-env.sh"
 SPARK_SLAVES="$SPARK_DIR/conf/slaves"
+SPARK_START="$SPARK_DIR/sbin/start-all.sh"
+SPARK_START="$SPARK_DIR/sbin/stop-all.sh"
+SPARK_SUBMIT="$SPARK_DIR/bin/spark-submit"
+SPARK_APP="$SPARK_DIR/target/scala-2.10/simple-project_2.10-1.0.jar"
 SBT_FILE="simple.sbt"
 SRC_DIR="src"
 IP_ADDR=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | head -n 1`
@@ -21,7 +25,9 @@ function usage {
 	echo -e "\t--compile: compile source code to be executed"
 	echo -e "\t--master: configure this pc as master"
 	echo -e "\t--worker <hostname>: add a worker to the worker list"
+	echo -e "\t--start: starts the configured cluster"
 	echo -e "\t--run: run the compiled source code"
+	echo -e "\t--stop: stops the cluster"
 }
 
 
@@ -78,8 +84,22 @@ function clearworkers {
 	echo -e "Done!\n"
 }
 
+function start {
+	echo "Starting cluster"
+	$SPARK_START
+	echo -e "Done!\n"
+}
+
+function stop {
+	echo "Stopping cluster"
+	$SPARK_STOP
+	echo -e "Done!\n"
+}
+
 function run {
-	echo "Run"
+	echo "Running application"
+	$SPARK_SUBMIT --class TestRead $SPARK_APP 
+	echo -e "Done!\n"
 }
 
 #Start
@@ -113,6 +133,12 @@ do
 		;;
 	"--clear-workers")
 		clearworkers
+		;;
+	"--start")
+		start
+		;;
+	"--stop")
+		stop
 		;;
 	"--run")
 		run
