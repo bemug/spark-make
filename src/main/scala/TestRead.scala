@@ -18,7 +18,7 @@ object TestRead {
    * reverse order. You should pop the back of it
    */
   class SourceTuple(var name: String, var deps: Set[String], var cmds:
-    List[String]) extends java.io.Serializable {}
+    List[String], var fileDeps: Set[String]) extends java.io.Serializable {}
   def main(args: Array[String]) {
 
     val conf = new SparkConf().setAppName("Spark Make")
@@ -48,11 +48,18 @@ object TestRead {
         //println("Reading target "+lastTarget)
         if (files contains lastTarget)
           println("WARNING: double reference to "+lastTarget+". Ignoring...")
-        else // add the entry with its dependencies (if they exist)
+        else { // add the entry with its dependencies (if they exist)
+          val s =
+            if (splitted.length > 1)
+              Set(splitted(1).replaceAll("[ \t]", " ").split(' ') :_*)
+            else
+              Set[String]()
           files += (lastTarget -> new SourceTuple(lastTarget,
-            if (splitted.length > 1) Set(splitted(1).replaceAll("[ \t]", " ").split(' ').filterNot((f: String) =>  Files.exists(Paths.get(makeDir+f))) :_*) else Set(),
-            List[String]()
+            s.filterNot((f: String) =>  Files.exists(Paths.get(makeDir+f))),
+            List[String](),
+            s.filter((f: String) =>  Files.exists(Paths.get(makeDir+f)) && f != "")
             ))
+        }
       }
       if (line.length > 0 && line(0) == '\t' && lastTarget != "") {
         tabs += 1
