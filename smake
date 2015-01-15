@@ -101,7 +101,7 @@ function stop {
 
 function run {
 	echo "Running application"
-	$SPARK_SUBMIT --class TestRead $SPARK_APP $MAKEFILE
+	$SPARK_SUBMIT --class TestRead $SPARK_APP $MAKEFILE pcserveur.ensimag.fr
 	echo -e "Done!\n"
 }
 

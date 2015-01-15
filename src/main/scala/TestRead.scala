@@ -143,9 +143,15 @@ object TestRead {
         println("Target "+key+" has "+value.deps.size + " deps" + (if (value.deps.size > 0) ": "+value.deps else ""));
         println(value.cmds.length + " commands to execute: "+value.cmds)
         // Copying deps files
-        sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":$(+makeDir)/"))!
+        for (fdep <- value.fileDeps) {
+          sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":$(pwd)/$(dirname makeDir)/"+fdep+" ."))!
+        }
+        for (fdep <- value.deps) {
+          sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":$(pwd)/$(dirname makeDir)/"+fdep+" ."))!
+        }
         //Using full call to not mess up with pipes and others
         sys.process.stringSeqToProcess(Seq("/bin/bash", "-c", value.cmds(0)))!
+        sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + value.name + " "+ master+":$(pwd)/$(dirname makeDir)"))!
       }
     }
   }
