@@ -24,6 +24,8 @@ object TestRead {
     val conf = new SparkConf().setAppName("Spark Make")
     val sc = new SparkContext(conf)
 
+    val master = args(1)
+
     val fi = Source.fromFile(if (args.length < 1) "testmakefile" else args(0))
     var tabs, lines = 0
     /*
@@ -138,10 +140,12 @@ object TestRead {
       val distKeyList = sc.parallelize(keyList, keyList.size)
       for (key <- distKeyList) {
         var value = mm(key)
-        println("Target "+key+" has "+value.deps.size+" deps"+ (if (value.deps.size > 0) ": "+value.deps else ""));
+        println("Target "+key+" has "+value.deps.size + " deps" + (if (value.deps.size > 0) ": "+value.deps else ""));
         println(value.cmds.length + " commands to execute: "+value.cmds)
+        // Copying deps files
+        sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":$(+makeDir)/"))!
         //Using full call to not mess up with pipes and others
-        sys.process.stringSeqToProcess(Seq("/bin/bash","-c",value.cmds(0)))!
+        sys.process.stringSeqToProcess(Seq("/bin/bash", "-c", value.cmds(0)))!
       }
     }
   }
