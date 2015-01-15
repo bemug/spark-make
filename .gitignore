@@ -18,3 +18,5 @@ project/plugins/project/
 target/
 project/
 tests/out
+spark-1.1.1
+spark-1.1.1.tgz

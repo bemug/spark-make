@@ -82,18 +82,32 @@ object TestRead {
       }
     }
 
+    def genMultiScpCmd(files: Set[String], toLocal: Boolean) : String = {
+      var s = "scp -B "
+      if (toLocal)
+        s += master + ":\""
+      else
+        s += "\""
+      for (f <- files) {
+        if (toLocal)
+          s += makeDir + "/"
+        s += f +" "
+      }
+      s += "\" "
+      if (toLocal) {
+        s += "."
+      } else {
+        s += master + ":" + makeDir
+      }
+      return s
+    }
+
     for ((key, value) <- files) {
       println("Target "+key+" has "+value.deps.size+" deps before loop");
       println(value.deps);
       println(value.fileDeps);
-      for (fdep <- value.fileDeps) {
-        value.godCmd += genScpCmd(fdep, true) + ";"
-        //sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":"+makeDir+"/"+fdep+" ."))!
-      }
-      for (fdep <- value.deps) {
-        value.godCmd += genScpCmd(fdep, true) + ";"
-        //sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":"+makeDir+"/"+fdep+" ."))!
-      }
+      val deps = value.fileDeps ++ value.deps
+      value.godCmd += genMultiScpCmd(deps, true) + ";"
       for (cmd <- value.cmds.reverse) {
         value.godCmd += cmd + ";"
         println("ADDED TO THE COMMAND"+ cmd)
@@ -171,19 +185,8 @@ object TestRead {
         var value = mm(key)
         println("Target "+key+" has "+value.deps.size + " deps" + (if (value.deps.size > 0) ": "+value.deps else ""));
         println(value.cmds.length + " commands to execute: "+value.cmds)
-        // Copying deps files
-        //for (fdep <- value.fileDeps) {
-          //println("LLUUUUUUL: scp -B " + master+":"+makeDir+"/"+fdep+" .")
-          //sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":"+makeDir+"/"+fdep+" ."))!
-        //}
-        //for (fdep <- value.deps) {
-          //println("LLOOOOOOL: scp -B " + master+":"+makeDir+"/"+fdep+" .")
-          //sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":$(pwd)/$(dirname makeDir)/"+fdep+" ."))!
-        //}
         //Using full call to not mess up with pipes and others
         sys.process.stringSeqToProcess(Seq("/bin/bash", "-c", value.godCmd))!
-        // copy files to original directory and make them accsseible to other procs
-        //sys.process.stringSeqToProcess(Seq("/bin/bash", "-c", "scp -B " + value.name + " "+ master+":"+makeDir))!
       }
     }
   }
