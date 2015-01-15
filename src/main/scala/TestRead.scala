@@ -48,18 +48,18 @@ object TestRead {
     for (line <- fi.getLines()) {
       if (line.indexOf(':') > 0) { // new target here
         val splitted = line.split(':')
-        lastTarget = splitted(0)
+        lastTarget = splitted(0).trim
         //println("Reading target "+lastTarget)
         if (files contains lastTarget)
           println("WARNING: double reference to "+lastTarget+". Ignoring...")
         else { // add the entry with its dependencies (if they exist)
           val s =
             if (splitted.length > 1)
-              Set(splitted(1).replaceAll("[ \t]", " ").split(' ') :_*)
+              Set(splitted(1).replaceAll("[ \t]+", " ").split(' ') :_*)
             else
               Set[String]()
           files += (lastTarget -> new SourceTuple(lastTarget,
-            s.filterNot((f: String) =>  Files.exists(Paths.get(makeDir+"/"+f))),
+            s.filterNot((f: String) =>  Files.exists(Paths.get(makeDir+"/"+f)) || f == ""),
             List[String](),
             s.filter((f: String) =>  Files.exists(Paths.get(makeDir+"/"+f)) && f != ""),
             ""
