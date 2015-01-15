@@ -26,8 +26,11 @@ function usage {
 	echo -e "\t--master: configure this pc as master"
 	echo -e "\t--worker <hostname>: add a worker to the worker list"
 	echo -e "\t--start: starts the configured cluster"
-	echo -e "\t--run: run the compiled source code"
+	echo -e "\t--run <makefile>: run the compiled source code with the specified makefile"
 	echo -e "\t--stop: stops the cluster"
+	echo "You can provide several commands on the same smake call. They will be"
+	echo "executed in the specified order."
+	echo ""
 }
 
 
@@ -98,7 +101,7 @@ function stop {
 
 function run {
 	echo "Running application"
-	$SPARK_SUBMIT --class TestRead $SPARK_APP 
+	$SPARK_SUBMIT --class TestRead $SPARK_APP $MAKEFILE
 	echo -e "Done!\n"
 }
 
@@ -107,7 +110,7 @@ splash #Display ascii
 #Check for args
 if [ $# -eq 0 ]
 then
-    echo "Please provide an argument"
+    echo "Please provide at least one argument"
 	usage
 	exit -1
 fi
@@ -141,6 +144,8 @@ do
 		stop
 		;;
 	"--run")
+		shift
+		MAKEFILE=$1
 		run
 		;;
 	*)
@@ -151,4 +156,3 @@ do
 done
 
 # End of file
-
