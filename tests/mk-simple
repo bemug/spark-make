@@ -1,20 +1,14 @@
 all: prep k1 k2
-	echo All done
 	cat k1 k2 > final
-	echo " ====== I END HERE ====== "
 
 prep:
 	echo " ====== I START HERE ====== "
 
 k1: a f1
-	echo k1
 	cat f1 a > k1
-	echo lulz >> k1
 
 k2: f2 f3
-	echo k2
 	cat f2 f3 > k2
 
 a: f1 f2
-	echo a >> f1
-	echo f2 > a
+	echo f2 f1 > a

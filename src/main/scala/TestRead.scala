@@ -18,7 +18,7 @@ object TestRead {
    * reverse order. You should pop the back of it
    */
   class SourceTuple(var name: String, var deps: Set[String], var cmds:
-    List[String], var fileDeps: Set[String]) extends java.io.Serializable {}
+    List[String], var fileDeps: Set[String], var godCmd : String) extends java.io.Serializable {}
   def main(args: Array[String]) {
 
     val conf = new SparkConf().setAppName("Spark Make")
@@ -38,9 +38,11 @@ object TestRead {
     val reg = baseDirPattern findFirstIn args(0)
     val makeDir =
       if (reg == None)
-        "./"
+        Paths.get("./").toAbsolutePath()
       else
-        reg.get
+        Paths.get(reg.get).toAbsolutePath()
+
+    println("THE DIR IS "+makeDir)
 
     var lastTarget = ""
     for (line <- fi.getLines()) {
@@ -57,9 +59,10 @@ object TestRead {
             else
               Set[String]()
           files += (lastTarget -> new SourceTuple(lastTarget,
-            s.filterNot((f: String) =>  Files.exists(Paths.get(makeDir+f))),
+            s.filterNot((f: String) =>  Files.exists(Paths.get(makeDir+"/"+f))),
             List[String](),
-            s.filter((f: String) =>  Files.exists(Paths.get(makeDir+f)) && f != "")
+            s.filter((f: String) =>  Files.exists(Paths.get(makeDir+"/"+f)) && f != ""),
+            ""
             ))
         }
       }
@@ -67,43 +70,69 @@ object TestRead {
         tabs += 1
         files(lastTarget).cmds = line.replaceAll("^\t+", "") :: files(lastTarget).cmds // XXX Support only one command
       }
+      // else comment or useless line
       lines += 1
     }
 
-    //for ((key, value) <- files) {
-      //println("Target "+key+" has "+value.deps.size+" deps before loop");
-    //}
+    def genScpCmd(file: String, toLocal: Boolean) : String = {
+      if (toLocal) {
+        return "scp -B " + master + ":" + makeDir + "/" + file + " ."
+      } else {
+        return "scp -B " + file + " " + master + ":" + makeDir
+      }
+    }
+
+    for ((key, value) <- files) {
+      println("Target "+key+" has "+value.deps.size+" deps before loop");
+      println(value.deps);
+      println(value.fileDeps);
+      for (fdep <- value.fileDeps) {
+        value.godCmd += genScpCmd(fdep, true) + ";"
+        //sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":"+makeDir+"/"+fdep+" ."))!
+      }
+      for (fdep <- value.deps) {
+        value.godCmd += genScpCmd(fdep, true) + ";"
+        //sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":"+makeDir+"/"+fdep+" ."))!
+      }
+      for (cmd <- value.cmds.reverse) {
+        value.godCmd += cmd + ";"
+        println("ADDED TO THE COMMAND"+ cmd)
+      }
+      value.godCmd += genScpCmd(value.name, false) + ";"
+      value.godCmd = value.godCmd.replace(";;", ";")
+      println("THE CMD OF GODS: "+ value.godCmd)
+    }
 
     // TODO Check for files that exists and remove them from dependencies or
     // add a special attribute to say that it is a exisiting file
 
     // now expand dependencies
-    var check = new Array[String](0)
-    for ((key, value) <- files) {
-      if (check.indexOf(key) < 0) { // skip if already calculated
-        var deps = Stack[String]() // contains every file that need to be checked
-        var visited = Stack[String]() // keep trace of visited nodes
-        // init stack with already known deps
-        for (file <- value.deps) {
-          deps.push(file)
-        }
-        while (deps.length > 0) {
-          val dep = deps.pop()
-          if (visited.indexOf(dep) < 0) {
-            visited.push(dep)
-            value.deps += dep // store our dependency
-            if (files contains dep) { // check for further dependencies
-              val dep_deps = files(dep).deps
-              for (dep_dep <- dep_deps) {
-                if (visited.indexOf(dep_dep) < 0) { // add them if they have not been checked
-                  deps.push(dep_dep)
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+    //var check = new Array[String](0)
+    //for ((key, value) <- files) {
+      //if (check.indexOf(key) < 0) { // skip if already calculated
+        //var deps = Stack[String]() // contains every file that need to be checked
+        //var visited = Stack[String]() // keep trace of visited nodes
+        //// init stack with already known deps
+        //for (file <- value.deps) {
+          //deps.push(file)
+        //}
+        //while (deps.length > 0) {
+          //val dep = deps.pop()
+          //if (visited.indexOf(dep) < 0) {
+            //visited.push(dep)
+            //value.deps += dep // store our dependency
+            //if (files contains dep) { // check for further dependencies
+              //val dep_deps = files(dep).deps
+              //for (dep_dep <- dep_deps) {
+                //if (visited.indexOf(dep_dep) < 0) { // add them if they have not been checked
+                  //deps.push(dep_dep)
+                //}
+              //}
+            //}
+          //}
+        //}
+      //}
+    //}
 
     /* Put them in the right order */
     print("\nSorting..")
@@ -143,15 +172,18 @@ object TestRead {
         println("Target "+key+" has "+value.deps.size + " deps" + (if (value.deps.size > 0) ": "+value.deps else ""));
         println(value.cmds.length + " commands to execute: "+value.cmds)
         // Copying deps files
-        for (fdep <- value.fileDeps) {
-          sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":$(pwd)/$(dirname makeDir)/"+fdep+" ."))!
-        }
-        for (fdep <- value.deps) {
-          sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":$(pwd)/$(dirname makeDir)/"+fdep+" ."))!
-        }
+        //for (fdep <- value.fileDeps) {
+          //println("LLUUUUUUL: scp -B " + master+":"+makeDir+"/"+fdep+" .")
+          //sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":"+makeDir+"/"+fdep+" ."))!
+        //}
+        //for (fdep <- value.deps) {
+          //println("LLOOOOOOL: scp -B " + master+":"+makeDir+"/"+fdep+" .")
+          //sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + master+":$(pwd)/$(dirname makeDir)/"+fdep+" ."))!
+        //}
         //Using full call to not mess up with pipes and others
-        sys.process.stringSeqToProcess(Seq("/bin/bash", "-c", value.cmds(0)))!
-        sys.process.stringSeqToProcess(Seq("/bin/bash","-c", "scp -B " + value.name + " "+ master+":$(pwd)/$(dirname makeDir)"))!
+        sys.process.stringSeqToProcess(Seq("/bin/bash", "-c", value.godCmd))!
+        // copy files to original directory and make them accsseible to other procs
+        //sys.process.stringSeqToProcess(Seq("/bin/bash", "-c", "scp -B " + value.name + " "+ master+":"+makeDir))!
       }
     }
   }
