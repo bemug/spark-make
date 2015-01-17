@@ -25,20 +25,33 @@ dot_working() {
   done
 }
 
+TIMER_INIT=()
+reset_timer() {
+  TIMER_INIT[$1]=$(date +%s%N)
+}
+
+get_timer() {
+  local timer_end
+  timer_end=$(date +%s%N)
+  elapsed=$(echo "scale=3; ($timer_end - ${TIMER_INIT[$1]}) / 1000000000" | bc)
+  echo "$elapsed"
+}
+
 re='^--?[a-zA-Z0-9]+'
 important() {
-  parse_opt $@
+  parse_opt "$@"
   echo ${opt[@]} "[104;30m"${args[@]}"[0m"
 }
 
 warning() {
-  parse_opt $@
+  parse_opt "$@"
   echo ${opt[@]} "[33m"${args[@]}"[0m"
 }
 
 error() {
-  parse_opt $@
+  parse_opt "$@"
   echo ${opt[@]} "[101m"${args[@]}"[0m"
+  return 1
 }
 
 ok() {
@@ -47,6 +60,7 @@ ok() {
 
 ko() {
   echo "[31m ✗ [0m"
+  return 1
 }
 
 warn() {
@@ -54,18 +68,24 @@ warn() {
 }
 
 good() {
-  parse_opt $@
+  parse_opt "$@"
   echo ${opt[@]} "[32m"${args[@]}"[0m"
 }
 
 bad() {
-  parse_opt $@
+  parse_opt "$@"
   echo ${opt[@]} "[31m"${args[@]}"[0m"
 }
 
+info() {
+  parse_opt "$@"
+  echo ${opt[@]} "[90m"${args[@]}"[0m"
+}
+
 working() {
-  parse_opt $@
-  echo ${opt[@]} "[34m"${args[@]}"[0m"
+  info -n "[$(date +%H:%M:%S)]" " "
+  parse_opt "$@"
+  echo ${opt[@]} "[94m"${args[@]}"[0m"
 }
 
 cleanup() {
@@ -102,7 +122,7 @@ log_cmd() {
   shift
   shift
   if [[ "$critical" ]]; then
-    $cmd $@ > ${LOG_DIR}/${name}.out 2> ${LOG_DIR}/${name}.err &
+    $cmd "$@" > ${LOG_DIR}/${name}.out 2> ${LOG_DIR}/${name}.err &
     p_cmd=$!
     if ! wait $p_cmd; then
       cleanup
@@ -112,7 +132,7 @@ log_cmd() {
       exit 1
     fi
   else
-    $cmd $@ > ${LOG_DIR}/${name}.out 2> ${LOG_DIR}/${name}.err &
+    $cmd "$@" > ${LOG_DIR}/${name}.out 2> ${LOG_DIR}/${name}.err &
     p_cmd=$!
     wait $p_cmd
     p=$?
@@ -124,8 +144,8 @@ log_cmd() {
 # Exit correctly with <C-C>
 trap 'killed' SIGINT SIGTERM
 
-echo "Let's do some benchmarking."
-echo "This benchmarking have been prepared for room E300."
+info "Let's do some benchmarking."
+info "This benchmarking have been prepared for room E300."
 warning "Make sure all computers are turned on before going on"
 
 LOG_DIR=$(mktemp -d /tmp/sparkXXXXXXXX)
@@ -139,7 +159,7 @@ stop_cluster() {
 }
 
 WORK_DIR="$HOME/spark-make/spark-1.1.1/work"
-cleaning_work() {
+clean_work() {
   working -n "Cleaning existing work at $WORK_DIR"
   if [[ -d "$WORK_DIR" ]]; then
     log_cmd clean-work rm -r $WORK_DIR/*
@@ -166,22 +186,48 @@ launch_cluster() {
 }
 
 run_makefile() {
-  working -n "Running makefile $1"
-  log_cmd spark-run-$w ./smake --run $1 && ok || ko
+  local t n p
+  n=$(basename $1)
+  working -n "Running makefile $1 with $2 cores"
+  reset_timer 1
+  log_cmd spark-run-$n ./smake --cores $2 --run $1 && ok || ko
+  p=$?
+  t=$(get_timer 1)
+  if [[ "$t" != "" && "$p" == 0 ]]; then
+    echo "$1 $2 $t" >> stats.txt
+  fi
 }
 
-# Makefiles to test against
-MAKEFILES="makefiles/blender_2.49/Makefile makefiles/blender_2.49/Makefile-recurse"
-WORKERS="4 10 30"
-for w in $WORKERS; do
-  important "Starting the benchmark with $w computers"
-  stop_cluster
-  cleaning_work
-  configure_cluster $w
-  be_patient 3
-  launch_cluster
-  for m in $MAKEFILES; do
-    run_makefile $m;
+clean_makedirs() {
+  working -n "Removing files created by makefiles"
+  log_cmd clean-makefiles rm -rf makefiles/premier/*.txt makefiles/blender_2.49/*.{png,mpg,blend} makefiles/blender_2.59/*.{avi,tga,jpg}
+  ok
+}
+
+#stop_cluster
+#configure_cluster 38
+#be_patient 3
+#launch_cluster
+
+# Makefiles list to test against
+MAKEFILES="makefiles/blender_2.59/Makefile makefiles/blender_2.49/Makefile makefiles/blender_2.49/Makefile-recurse makefiles/premier/Makefile"
+CORES="4 10 30" # We tests with different amount of cores
+REPEAT=10 # We must repeat the task some time in order to get correct results
+for c in $CORES; do
+  important "Starting benchmarking with $c cores. $REPEAT repetitions"
+  r=$REPEAT
+  while [[ $r > 0 ]]; do
+    info "Iteration $r"
+    clean_work
+    clean_makedirs
+    for m in $MAKEFILES; do
+      run_makefile $m $c;
+    done
+    ((r--))
   done
-  read
 done
+
+working -n "Cleaning the mess :)"
+clean_work
+clean_makedirs
+ok
