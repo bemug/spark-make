@@ -41,7 +41,7 @@ function compile {
 	cp -r $SBT_FILE $SRC_DIR $SPARK_DIR
 	cd $SPARK_DIR
 	#Compile
-	./sbt/sbt package
+	./sbt/sbt package || ERR=YES
 	#Go back
 	rm -rf $SBT_FILE $SRC_DIR
 	cd ..
@@ -89,19 +89,19 @@ function clearworkers {
 
 function start {
 	echo "Starting cluster"
-	$SPARK_START
+	$SPARK_START || ERR=YES
 	echo -e "Done!\n"
 }
 
 function stop {
 	echo "Stopping cluster"
-	$SPARK_STOP
+	$SPARK_STOP || ERR=YES
 	echo -e "Done!\n"
 }
 
 function run {
 	echo "Running application"
-	$SPARK_SUBMIT --class TestRead $SPARK_APP $MAKEFILE pcserveur.ensimag.fr
+	$SPARK_SUBMIT --class TestRead $SPARK_APP $MAKEFILE pcserveur.ensimag.fr || ERR=YES
 	echo -e "Done!\n"
 }
 
@@ -120,6 +120,7 @@ if [ ! -d "$SPARK_DIR" ]; then
 	exit -1
 fi
 #Parse args
+ERR=
 while [ "$1" ]
 do
 	case "$1" in
@@ -154,5 +155,10 @@ do
 	esac
     shift
 done
+
+if [[ "$ERR" ]]; then
+  exit 1
+fi
+exit 0
 
 # End of file
