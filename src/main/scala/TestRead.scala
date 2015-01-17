@@ -21,7 +21,7 @@ object TestRead {
     List[String], var fileDeps: Set[String], var godCmd : String) extends java.io.Serializable {}
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName("Spark Make")
+    val conf = new SparkConf().setAppName(if (args.length < 1) "testmakefile" else args(0))
     val sc = new SparkContext(conf)
 
     val master = args(1)
