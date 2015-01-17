@@ -1,5 +1,9 @@
 #! /bin/bash
 
+ERRORS=0
+WARNINGS=0
+SUCCESS=0
+
 parse_opt() {
   local io ia
   args=() # array
@@ -56,14 +60,17 @@ error() {
 
 ok() {
   echo "[32m ✓ [0m"
+  ((SUCCESS++))
 }
 
 ko() {
   echo "[31m ✗ [0m"
+  ((ERRORS++))
   return 1
 }
 
 warn() {
+  ((WARNINGS++))
   echo "[33m ⚠ [0m"
 }
 
@@ -83,7 +90,7 @@ info() {
 }
 
 working() {
-  info -n "[$(date +%H:%M:%S)]" " "
+  info -n "[$(date +%H:%M:%S)] "
   parse_opt "$@"
   echo ${opt[@]} "[94m"${args[@]}"[0m"
 }
@@ -141,18 +148,6 @@ log_cmd() {
   fi
 }
 
-# Exit correctly with <C-C>
-trap 'killed' SIGINT SIGTERM
-
-info "Let's do some benchmarking."
-info "This benchmarking have been prepared for room E300."
-warning "Make sure all computers are turned on before going on"
-
-LOG_DIR=$(mktemp -d /tmp/sparkXXXXXXXX)
-important "Logs will be available at $LOG_DIR"
-
-#read -p "<Press ENTER to continue>"
-
 stop_cluster() {
   working -n "Stopping started cluster"
   log_cmd spark-stop ./smake --stop && ok || ko
@@ -204,10 +199,22 @@ clean_makedirs() {
   ok
 }
 
-#stop_cluster
-#configure_cluster 38
-#be_patient 3
-#launch_cluster
+# Exit correctly with <C-C>
+trap 'killed' SIGINT SIGTERM
+
+info "Let's do some benchmarking."
+info "This benchmarking have been prepared for room E300."
+warning "Make sure all computers are turned on before going on"
+
+LOG_DIR=$(mktemp -d /tmp/sparkXXXXXXXX)
+important "Logs will be available at $LOG_DIR"
+
+#read -p "<Press ENTER to continue>"
+
+stop_cluster
+configure_cluster 38
+be_patient 3
+launch_cluster
 
 # Makefiles list to test against
 MAKEFILES="makefiles/blender_2.59/Makefile makefiles/blender_2.49/Makefile makefiles/blender_2.49/Makefile-recurse makefiles/premier/Makefile"
@@ -232,3 +239,6 @@ working -n "Cleaning the mess :)"
 clean_work
 clean_makedirs
 ok
+
+info -n "[$(date +%H:%M:%S)] "
+echo "Finished: [92m$SUCCESS ✓ [93m$WARNINGS ⚠ [91m$ERRORS ✗[0m"
