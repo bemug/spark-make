@@ -217,7 +217,8 @@ for c in $CORES; do
   important "Starting benchmarking with $c cores. $REPEAT repetitions"
   r=$REPEAT
   while [[ $r > 0 ]]; do
-    info "Iteration $r"
+    info -n "[$(date +%H:%M:%S)] "
+    important "Remaining iterations: $r"
     clean_work
     clean_makedirs
     for m in $MAKEFILES; do
