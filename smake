@@ -10,6 +10,7 @@ SPARK_APP="$SPARK_DIR/target/scala-2.10/simple-project_2.10-1.0.jar"
 SBT_FILE="simple.sbt"
 SRC_DIR="src"
 IP_ADDR=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | head -n 1`
+TOTAL_CORES=20
 
 #Useless funcs
 function splash {
@@ -26,6 +27,7 @@ function usage {
 	echo -e "\t--master: configure this pc as master"
 	echo -e "\t--worker <hostname>: add a worker to the worker list"
 	echo -e "\t--start: starts the configured cluster"
+	echo -e "\t--cores <n>: specifiy the number of cores to use. Must be called with --run"
 	echo -e "\t--run <makefile>: run the compiled source code with the specified makefile"
 	echo -e "\t--stop: stops the cluster"
 	echo "You can provide several commands on the same smake call. They will be"
@@ -101,7 +103,7 @@ function stop {
 
 function run {
 	echo "Running application"
-	$SPARK_SUBMIT --class TestRead $SPARK_APP $MAKEFILE pcserveur.ensimag.fr || ERR=YES
+	$SPARK_SUBMIT --class TestRead --total-executor-cores $TOTAL_CORES $SPARK_APP $MAKEFILE pcserveur.ensimag.fr || ERR=YES
 	echo -e "Done!\n"
 }
 
@@ -144,6 +146,10 @@ do
 	"--stop")
 		stop
 		;;
+	"--cores")
+		shift
+		TOTAL_CORES=$1
+		;;
 	"--run")
 		shift
 		MAKEFILE=$1
@@ -157,7 +163,7 @@ do
 done
 
 if [[ "$ERR" ]]; then
-  exit 1
+	exit 1
 fi
 exit 0
 
