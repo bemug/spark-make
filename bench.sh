@@ -218,7 +218,7 @@ launch_cluster
 
 # Makefiles list to test against
 MAKEFILES="makefiles/blender_2.59/Makefile makefiles/blender_2.49/Makefile makefiles/blender_2.49/Makefile-recurse makefiles/premier/Makefile"
-CORES="4 10 30" # We tests with different amount of cores
+CORES="4 10 30 60 100" # We tests with different amount of cores
 REPEAT=10 # We must repeat the task some time in order to get correct results
 for c in $CORES; do
   important "Starting benchmarking with $c cores. $REPEAT repetitions"
