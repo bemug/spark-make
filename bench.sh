@@ -164,9 +164,10 @@ clean_work() {
 
 configure_cluster() {
   local from to n
-  n=$1
-  (( from = 301, to = from + n ))
-  working -n "Configuring the cluster"
+  n=$2
+  from=$1
+  (( to = from + n - 1 ))
+  working -n "Configuring the cluster from ensipc${from} to ensipc${to}"
   log_cmd spark-stop ./smake --master --clear-workers $(./workers.sh $from $to) && ok || ko
 }
 
@@ -212,13 +213,13 @@ important "Logs will be available at $LOG_DIR"
 #read -p "<Press ENTER to continue>"
 
 stop_cluster
-configure_cluster 38
+configure_cluster 300 338
 be_patient 3
 launch_cluster
 
 # Makefiles list to test against
 MAKEFILES="makefiles/blender_2.59/Makefile makefiles/blender_2.49/Makefile makefiles/blender_2.49/Makefile-recurse makefiles/premier/Makefile"
-CORES="4 10 30 60 100" # We tests with different amount of cores
+CORES="5 10 15 20 25 30 40 50 60 70 80 90 100" # We tests with different amount of cores
 REPEAT=10 # We must repeat the task some time in order to get correct results
 for c in $CORES; do
   important "Starting benchmarking with $c cores. $REPEAT repetitions"
