@@ -131,8 +131,10 @@ log_cmd() {
   if [[ "$critical" ]]; then
     $cmd "$@" > ${LOG_DIR}/${name}.out 2> ${LOG_DIR}/${name}.err &
     p_cmd=$!
-    if ! wait $p_cmd; then
-      cleanup
+    wait $p_cmd
+    p=$?
+    cleanup
+    if [[ "$p" != 0 ]]; then
       error ' CRITICAL '
       warning "Checking log at ${LOG_DIR}/${name}.err"
       less ${LOG_DIR}/${name}.err
