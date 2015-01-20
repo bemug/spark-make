@@ -9,7 +9,7 @@ SPARK_SUBMIT="$SPARK_DIR/bin/spark-submit"
 SPARK_APP="$SPARK_DIR/target/scala-2.10/simple-project_2.10-1.0.jar"
 SBT_FILE="simple.sbt"
 SRC_DIR="src"
-IP_ADDR=`ifconfig | sed -En 's/127.0.0.1//;s/.*inet (adr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' | head -n 1`
+IP_ADDR=$(hostname -i)
 TOTAL_CORES=20
 
 #Useless funcs

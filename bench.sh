@@ -160,8 +160,8 @@ clean_work() {
   working -n "Cleaning existing work at $WORK_DIR"
   if [[ -d "$WORK_DIR" ]]; then
     log_cmd clean-work rm -r $WORK_DIR/*
-    ok
   fi
+  ok
 }
 
 configure_cluster() {
