@@ -20,7 +20,4 @@ project/
 tests/out
 spark-1.1.1
 spark-1.1.1.tgz
-*.png
-cube.mpg
-cube_anim.blend
 stats.txt
