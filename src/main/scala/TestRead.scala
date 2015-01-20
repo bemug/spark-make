@@ -117,37 +117,6 @@ object TestRead {
       println("THE CMD OF GODS: "+ value.godCmd)
     }
 
-    // TODO Check for files that exists and remove them from dependencies or
-    // add a special attribute to say that it is a exisiting file
-
-    // now expand dependencies
-    //var check = new Array[String](0)
-    //for ((key, value) <- files) {
-      //if (check.indexOf(key) < 0) { // skip if already calculated
-        //var deps = Stack[String]() // contains every file that need to be checked
-        //var visited = Stack[String]() // keep trace of visited nodes
-        //// init stack with already known deps
-        //for (file <- value.deps) {
-          //deps.push(file)
-        //}
-        //while (deps.length > 0) {
-          //val dep = deps.pop()
-          //if (visited.indexOf(dep) < 0) {
-            //visited.push(dep)
-            //value.deps += dep // store our dependency
-            //if (files contains dep) { // check for further dependencies
-              //val dep_deps = files(dep).deps
-              //for (dep_dep <- dep_deps) {
-                //if (visited.indexOf(dep_dep) < 0) { // add them if they have not been checked
-                  //deps.push(dep_dep)
-                //}
-              //}
-            //}
-          //}
-        //}
-      //}
-    //}
-
     /* Put them in the right order */
     print("\nSorting..")
     var mm = collection.mutable.Map[String, SourceTuple]() ++= files //clone

@@ -238,10 +238,5 @@ for c in $CORES; do
   done
 done
 
-working -n "Cleaning the mess :)"
-clean_work
-clean_makedirs
-ok
-
 info -n "[$(date +%H:%M:%S)] "
 echo "Finished: [92m$SUCCESS ✓ [93m$WARNINGS ⚠ [91m$ERRORS ✗[0m"
