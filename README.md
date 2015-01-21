@@ -15,9 +15,6 @@ Utiliser `smake` pour compiler et lancer.
 `bench.sh` est là que pour tester les performances et ne doit pas être utilisé
 pour lancer l'application.
 
-#Bugs connus
-Certaines copies de fichiers peuvent échouer selon le réseau.
-
 #Scripts
 
 * `smake`: L'appeler sans arguments pour voir l'utilisation
