@@ -55,6 +55,7 @@ function master {
 	echo "export SPARK_MASTER_IP=$IP_ADDR" > $SPARK_ENV
 	echo "export SPARK_MASTER_PORT=7077" >> $SPARK_ENV
 	echo "export MASTER=spark://\${SPARK_MASTER_IP}:\${SPARK_MASTER_PORT}" >> $SPARK_ENV
+	echo "export SPARK_WORKER_DIR=/tmp" >> $SPARK_ENV
 	echo -e "Done!\n"
 }
 
