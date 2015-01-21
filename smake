@@ -25,6 +25,7 @@ function usage {
 	echo "Usage:"
 	echo -e "\t--compile: compile source code to be executed"
 	echo -e "\t--master: configure this pc as master"
+	echo -e "\t--clear-workers: Remove all workers from config file"
 	echo -e "\t--worker <hostname>: add a worker to the worker list"
 	echo -e "\t--start: starts the configured cluster"
 	echo -e "\t--cores <n>: specifiy the number of cores to use. Must be called with --run"
