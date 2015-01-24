@@ -1,6 +1,7 @@
 #! /bin/bash
 
 source task-logger.sh
+reset_timer 2
 
 stop_cluster() {
   working -n "Stopping started cluster"
@@ -59,19 +60,16 @@ warning "Make sure all computers are turned on before going on"
 important "Logs will be available at $LOG_DIR"
 
 read -p "<Press ENTER to continue>"
-    clean_work
-    clean_makedirs
-    exit
 
 stop_cluster
-configure_cluster 300 338
+configure_cluster 300 39
 be_patient 3
 launch_cluster
 
 # Makefiles list to test against
 MAKEFILES="makefiles/blender_2.59/Makefile makefiles/blender_2.49/Makefile makefiles/blender_2.49/Makefile-recurse makefiles/premier/Makefile"
-CORES="5 10 15 20 25 30 40 50 60 70 80 90 100" # We tests with different amount of cores
-REPEAT=5 # We must repeat the task some time in order to get correct results
+CORES="60 70 80 90 100" # We tests with different amount of cores
+REPEAT=3 # We must repeat the task some time in order to get correct results
 for c in $CORES; do
   important "Starting benchmarking with $c cores. $REPEAT repetitions"
   r=$REPEAT
@@ -88,4 +86,4 @@ for c in $CORES; do
 done
 
 info -n "[$(date +%H:%M:%S)] "
-echo "Finished: [92m$SUCCESS ✓ [93m$WARNINGS ⚠ [91m$ERRORS ✗[0m"
+echo "Finished in $(get_timer 2)s: [92m$SUCCESS ✓ [93m$WARNINGS ⚠ [91m$ERRORS ✗[0m"
